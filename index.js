@@ -15,7 +15,7 @@ app.use(express.json());
 
 //Insert new users
 app.post('/addUser', (req, res) => {
-    const { username, score } = req.query;
+    const { username, score } = req.body;
 
     if (!username || score === undefined) {
         return res.status(400).send('Username or score missing!');
@@ -38,6 +38,41 @@ app.get('/getUsersData', (req, res) => {
       res.json(results);
     });
   });
+
+
+//Update user data
+app.post('/changeUserData', (req, res) => {
+    const {id, score} = req.body;
+
+    if (!id || score === undefined) {
+        return res.status(400).send('id or score missing!');
+    } 
+
+    db.query('UPDATE user_data SET score=? WHERE id =?', [score, id], (error, results) => {
+        if (error) {
+            return res.status(500).send('An error occured while changing data!')
+        }
+        res.send(`User: ${id}'s score has been changed to ${score}`)
+    });
+});
+
+
+//Delete user
+app.post('/deleteUser', (req, res) => {
+    const { username } = req.body;
+    db.query('DELETE FROM user_data WHERE username =?', [username], (error, results) => {
+        if (error) {
+            return res.status(500).send('An error occured while deleting user!');
+        }
+
+        if (results.affectedRows === 0) {
+            return res.status(404).send(`User: ${username} not found.`);
+        }
+
+        res.send(`User: ${username} has been deleted`);
+    })
+})
+
 
 //Start-up the server
 var server = app.listen(8000, () => {
